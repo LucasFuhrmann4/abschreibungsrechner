@@ -102,4 +102,59 @@ class ControlWidget(QWidget):
         self.__text_browser.append(line)
 
     def __degression_to_linear(self):
-        self.__text_browser.append("Degressive auf lineare Abschreibung")
+        self.__text_browser.clear()
+        self.__text_browser.append("Degressive auf lineare Abschreibung:")
+        self.__text_browser.append("------------------------------------")
+        self.__text_browser.append("")
+
+        years = int(self.__line_edit_acquisition_period.text())
+        linear_value = degressiv_value = float(self.__line_edit_acquisition_value.text())
+
+        linear_loos_per_year = linear_value / years
+
+        degressiv_loos_per_year = 2 / years
+        if degressiv_loos_per_year < 0.20:
+            degressiv_loos_per_year = 0.20
+
+
+        self.__text_browser.append("Jahr\tBuchwert\tAbschreibung\tArt")
+
+        current_year = 1
+        while True:
+            if linear_loos_per_year > (degressiv_value * degressiv_loos_per_year):
+                break
+
+            line = str(current_year)
+            line += "\t"
+            line += "{:5.2f}".format(degressiv_value)
+            line += "\t"
+            line += "{:5.2f}".format(degressiv_value * degressiv_loos_per_year)
+            line += "\t\tdegressiv"
+
+            self.__text_browser.append(line)
+
+            linear_value -= linear_loos_per_year
+            degressiv_value *= (1 - degressiv_loos_per_year)
+
+            current_year += 1
+
+        while degressiv_value > linear_loos_per_year:
+            line = str(current_year)
+            line += "\t"
+            line += "{:5.2f}".format(degressiv_value)
+            line += "\t"
+            line += "{:5.2f}".format(linear_loos_per_year)
+            line += "\t\tlinear"
+
+            self.__text_browser.append(line)
+
+            current_year += 1
+            degressiv_value -= linear_loos_per_year
+
+        line = "Ab "
+        line += str(current_year)
+        line += "\t1,00\t0,00\t\tkeine"
+
+        self.__text_browser.append(line)
+
+
