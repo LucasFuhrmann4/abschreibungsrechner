@@ -12,6 +12,10 @@ class CentralWidget(QWidget):
         control_widget = ControlWidget(self)
         chart_widget = ChartWidget(self)
 
+        control_widget.sent_value.connect(chart_widget.addPoint)
+        control_widget.line_edit_acquisition_period.textEdited.connect(chart_widget.setYears)
+        control_widget.line_edit_acquisition_value.textEdited.connect(chart_widget.setValue)
+
         box_layout = QHBoxLayout()
 
         box_layout.addWidget(control_widget)

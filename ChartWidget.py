@@ -1,5 +1,7 @@
+from datetime import datetime
+
 from PyQt6.QtCharts import QChartView, QChart, QLineSeries, QDateTimeAxis, QValueAxis
-from PyQt6.QtCore import Qt, QDateTime
+from PyQt6.QtCore import Qt, QDateTime, pyqtSlot
 from PyQt6.QtGui import QMouseEvent
 
 
@@ -8,46 +10,42 @@ class ChartWidget(QChartView):
         super(ChartWidget, self).__init__(parent)
 
         self.__series = QLineSeries()
-        self.__series.setName("Goldpreisentwicklung in $")
+        self.__series.setName("Restwert")
 
-        axis_x = QDateTimeAxis()
-        axis_x.setTitleText("Datum")
+        self.__axis_x = QDateTimeAxis()
+        self.__axis_x.setTitleText("Datum")
+        self.__axis_x.setFormat("yyyy")
 
-        start_date = QDateTime.currentDateTime().addSecs(-1 * 60 * 10)
-        end_date = QDateTime.currentDateTime()
-
-        axis_x.setRange(start_date, end_date)
-
-        axis_x.setFormat("hh:mm:ss")
-
-        axis_dollar = QValueAxis()
-        axis_dollar.setTitleText("Goldpreis in $")
-        axis_dollar.setRange(1250, 2750)
+        self.__axis_dollar = QValueAxis()
+        self.__axis_dollar.setTitleText("Restwert")
 
         self.__chart = QChart()
-        self.__chart.setTitle("Goldpreisentwicklung")
+        self.__chart.setTitle("Abschreibungsverlauf")
 
-        self.__chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
-        self.__chart.addAxis(axis_dollar, Qt.AlignmentFlag.AlignLeft)
+        self.__chart.addAxis(self.__axis_x, Qt.AlignmentFlag.AlignBottom)
+        self.__chart.addAxis(self.__axis_dollar, Qt.AlignmentFlag.AlignLeft)
 
         self.__chart.addSeries(self.__series)
 
-        self.__series.attachAxis(axis_x)
-        self.__series.attachAxis(axis_dollar)
+        self.__series.attachAxis(self.__axis_x)
+        self.__series.attachAxis(self.__axis_dollar)
 
         self.setChart(self.__chart)
 
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        if event.button().LeftButton:
-            event.accept()
+    @pyqtSlot(str)
+    def setYears(self, years):
+        start_date = QDateTime.currentDateTime()
+        end_date = QDateTime.currentDateTime().addYears(int(years))
 
-            new_value = self.__chart.mapToValue(event.pos().toPointF(), self.__series)
+        self.__axis_x.setRange(start_date, end_date)
 
-            for i in range(len(self.__series.points())):
-                if self.__series.at(i).x() > new_value.x():
-                    self.__series.insert(i, new_value)
+    @pyqtSlot(str)
+    def setValue(self, value):
+        self.__axis_dollar.setRange(0, float(value))
 
-                    return
+    @pyqtSlot(int, float)
+    def addPoint(self, year, value):
+        current_date_time = QDateTime.currentDateTime().addYears(year)
+        print(current_date_time, value)
 
-            self.__series.append(new_value)
-
+        self.__series.append(current_date_time.toMSecsSinceEpoch(), value)

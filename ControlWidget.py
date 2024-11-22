@@ -1,8 +1,10 @@
-from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtCore import pyqtSlot, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextBrowser, QLineEdit, QPushButton, QComboBox
 
 
 class ControlWidget(QWidget):
+    sent_value = pyqtSignal(int, float)
+
     def __init__(self, parent=None):
         super(ControlWidget, self).__init__(parent)
 
@@ -15,13 +17,13 @@ class ControlWidget(QWidget):
 
         box_layout.addWidget(QLabel("Anschaffungswert in Euro"))
 
-        self.__line_edit_acquisition_value = QLineEdit("50")
-        box_layout.addWidget(self.__line_edit_acquisition_value)
+        self.line_edit_acquisition_value = QLineEdit("50")
+        box_layout.addWidget(self.line_edit_acquisition_value)
 
         box_layout.addWidget(QLabel("Abschreibungsdauer in Jahren"))
 
-        self.__line_edit_acquisition_period = QLineEdit("4")
-        box_layout.addWidget(self.__line_edit_acquisition_period)
+        self.line_edit_acquisition_period = QLineEdit("4")
+        box_layout.addWidget(self.line_edit_acquisition_period)
 
         box_layout.addWidget(QLabel("Abschreibungsart"))
 
@@ -48,8 +50,8 @@ class ControlWidget(QWidget):
     def __linear(self):
         self.__text_browser.append("Lineare Abschreibung")
 
-        years = int(self.__line_edit_acquisition_period.text())
-        value = float(self.__line_edit_acquisition_value.text())
+        years = int(self.line_edit_acquisition_period.text())
+        value = float(self.line_edit_acquisition_value.text())
 
         loos_per_year = value / years
 
@@ -60,6 +62,8 @@ class ControlWidget(QWidget):
             line += ". Jahr: \t"
             line += "{:5.2f}".format(value)
             line += " Euro"
+
+
 
             self.__text_browser.append(line)
 
@@ -75,8 +79,8 @@ class ControlWidget(QWidget):
     def __degression(self):
         self.__text_browser.append("Degressive Abschreibung")
 
-        years = int(self.__line_edit_acquisition_period.text())
-        value = float(self.__line_edit_acquisition_value.text())
+        years = int(self.line_edit_acquisition_period.text())
+        value = float(self.line_edit_acquisition_value.text())
 
         loos_per_year = (1 - 2 / years)
         if loos_per_year < 0.80:
@@ -107,8 +111,8 @@ class ControlWidget(QWidget):
         self.__text_browser.append("------------------------------------")
         self.__text_browser.append("")
 
-        years = int(self.__line_edit_acquisition_period.text())
-        linear_value = degressiv_value = float(self.__line_edit_acquisition_value.text())
+        years = int(self.line_edit_acquisition_period.text())
+        linear_value = degressiv_value = float(self.line_edit_acquisition_value.text())
 
         linear_loos_per_year = linear_value / years
 
@@ -133,6 +137,8 @@ class ControlWidget(QWidget):
 
             self.__text_browser.append(line)
 
+            self.sent_value.emit(current_year, degressiv_value)
+
             linear_value -= linear_loos_per_year
             degressiv_value *= (1 - degressiv_loos_per_year)
 
@@ -146,6 +152,8 @@ class ControlWidget(QWidget):
             line += "{:5.2f}".format(linear_loos_per_year)
             line += "\t\tlinear"
 
+            self.sent_value.emit(current_year, degressiv_value)
+
             self.__text_browser.append(line)
 
             current_year += 1
@@ -154,6 +162,8 @@ class ControlWidget(QWidget):
         line = "Ab "
         line += str(current_year)
         line += "\t1,00\t0,00\t\tkeine"
+
+        self.sent_value.emit(current_year, 1.00)
 
         self.__text_browser.append(line)
 
